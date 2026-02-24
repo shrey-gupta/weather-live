@@ -3,77 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GraphCast Forecasting Setup</title>
+    <title>Weather-Live | GraphCast Precipitation Demo</title>
     <meta
       name="description"
-      content="GraphCast weather forecasting setup using ERA5 inputs, prepared as a shareable MVP project page."
+      content="Interactive 2025 precipitation forecast demo for the US using a GraphCast-style windowed setup."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header class="hero">
-      <p class="kicker">Weather Forecasting Workflow</p>
-      <h1>GraphCast + ERA5 Setup</h1>
-      <p class="subtitle">
-        GitHub Pages overview for a practical GraphCast forecasting setup with ERA5 inputs,
-        scoped for rapid demonstration and iterative improvement.
+    <div class="ambient"></div>
+    <header class="hero wrap">
+      <p class="eyebrow">Weather-Live</p>
+      <h1>US Precipitation Forecast Demo for 2025</h1>
+      <p>
+        Hosted webpage concept for a GraphCast-style forecast interface. Select a 2025 start date and window size
+        (choose 5 days if needed) to generate a precipitation outlook focused on the continental US.
       </p>
-      <a class="cta" data-repo-link href="#" target="_blank" rel="noreferrer">View Repository</a>
     </header>
 
-    <main>
-      <section class="card">
-        <h2>MVP Scope</h2>
-        <ul>
-          <li>Single GraphCast forecasting workflow using ERA5 input files</li>
-          <li>Environment validation for JAX, GraphCast, and geospatial dependencies</li>
-          <li>Notebook-based demos for quick iteration and review</li>
-          <li>Simple project page hosted through GitHub Pages</li>
-        </ul>
+    <main class="wrap layout">
+      <section class="panel controls">
+        <h2>Forecast Controls</h2>
+        <label for="startDate">Forecast start date (2025)</label>
+        <input id="startDate" type="date" min="2025-01-01" max="2025-12-31" value="2025-08-15" />
+
+        <label for="windowSize">Window size (days)</label>
+        <input id="windowSize" type="number" min="1" max="14" value="5" />
+
+        <label for="trainingYears">Historical years used for learning</label>
+        <select id="trainingYears">
+          <option value="2010-2024">2010-2024 ERA5 baseline (recommended)</option>
+          <option value="2015-2024">2015-2024 recent climate baseline</option>
+          <option value="2000-2024">2000-2024 long-memory baseline</option>
+        </select>
+
+        <button id="runBtn" type="button">Generate Forecast</button>
+
+        <div class="subcontrols">
+          <label for="dayView">View day in window</label>
+          <input id="dayView" type="range" min="1" max="5" value="1" />
+          <p id="dayViewLabel">Day 1</p>
+        </div>
       </section>
 
-      <section class="card">
-        <h2>Not Included Yet</h2>
-        <ul>
-          <li>Operational real-time data ingestion with retries</li>
-          <li>API hardening with auth, rate limits, and caching</li>
-          <li>Monitoring/alerting and comprehensive automated testing</li>
-        </ul>
-      </section>
-
-      <section class="card">
-        <h2>Project Links</h2>
-        <p>
-          Use these references for context during review:
-        </p>
-        <ul>
-          <li><a data-repo-link href="#">Repository README</a></li>
-          <li><a href="https://github.com/google-deepmind/graphcast" target="_blank" rel="noreferrer">Official GraphCast Repository</a></li>
-          <li><a href="https://github.com/google-deepmind/graphcast/blob/main/graphcast_demo.ipynb" target="_blank" rel="noreferrer">Official GraphCast Demo Notebook</a></li>
-        </ul>
+      <section class="panel outputs">
+        <div class="metrics" id="metrics"></div>
+        <div class="mapShell">
+          <canvas id="forecastMap" width="900" height="540" aria-label="US precipitation map"></canvas>
+          <div class="legend">
+            <span>Low</span>
+            <div class="gradient"></div>
+            <span>High</span>
+          </div>
+        </div>
+        <div class="daily" id="dailyCards"></div>
       </section>
     </main>
 
-    <footer>
-      <p>
-        Prepared as a forecasting setup MVP in February 2026. For production usage,
-        add operational reliability, observability, and security controls.
-      </p>
-    </footer>
+    <section class="wrap notes panel">
+      <h2>Demo Notes</h2>
+      <ul>
+        <li>Target year is constrained to 2025 for this hosted demo.</li>
+        <li>Map focuses on the continental US while using a global-model framing.</li>
+        <li>Output is a prototype visualization for presentation, not production forecasting.</li>
+      </ul>
+    </section>
 
-    <script>
-      (function () {
-        var host = window.location.hostname;
-        var repo = window.location.pathname.split("/").filter(Boolean)[0] || "";
-        var user = host.endsWith("github.io") ? host.replace(".github.io", "") : "";
-        if (!user || !repo) return;
-
-        var base = "https://github.com/" + user + "/" + repo;
-        var links = document.querySelectorAll("[data-repo-link]");
-        links.forEach(function (link) {
-          link.href = base;
-        });
-      })();
-    </script>
+    <script src="./app.js"></script>
   </body>
 </html>
