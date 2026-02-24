@@ -1,0 +1,5 @@
+.DS_Store
+graphcast/
+__pycache__/
+era5_daily_nc/
+mappings/

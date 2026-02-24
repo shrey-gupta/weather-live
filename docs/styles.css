@@ -1,0 +1,101 @@
+:root {
+  --bg: #f4f3ee;
+  --panel: #fffdf8;
+  --ink: #161a1d;
+  --accent: #386641;
+  --accent-2: #bc4749;
+  --border: #d9d3c7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 15% 10%, #dde5b6 0%, transparent 35%),
+    radial-gradient(circle at 80% 0%, #f2cc8f 0%, transparent 28%), var(--bg);
+  line-height: 1.5;
+}
+
+.hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 4rem 1.25rem 2rem;
+}
+
+.kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-2);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+h1 {
+  margin: 0.4rem 0;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.1;
+}
+
+.subtitle {
+  max-width: 60ch;
+  font-size: 1.05rem;
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 0.75rem;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.card ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.card a {
+  color: var(--accent-2);
+}
+
+footer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3rem;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-top: 2.5rem;
+  }
+}
