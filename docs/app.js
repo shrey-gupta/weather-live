@@ -9,13 +9,10 @@
   var dailyCardsEl = document.getElementById("dailyCards");
   var canvas = document.getElementById("forecastMap");
   var ctx = canvas.getContext("2d");
-
-  var usPoly = [
-    [-124, 48], [-123, 44], [-122, 41], [-121, 38], [-118, 34], [-114, 32], [-110, 31],
-    [-106, 31], [-102, 29], [-98, 27], [-94, 28], [-90, 29], [-86, 30], [-83, 28], [-81, 25],
-    [-80, 28], [-81, 31], [-79, 34], [-77, 36], [-75, 39], [-74, 41], [-71, 44], [-74, 45],
-    [-82, 46], [-90, 47], [-97, 49], [-110, 49], [-120, 49], [-124, 48]
-  ];
+  var projection = null;
+  var path = null;
+  var usNation = null;
+  var usStateBorders = null;
 
   var lonMin = -125;
   var lonMax = -66;
@@ -47,21 +44,8 @@
   }
 
   function toXY(lon, lat) {
-    var x = ((lon - lonMin) / (lonMax - lonMin)) * canvas.width;
-    var y = canvas.height - ((lat - latMin) / (latMax - latMin)) * canvas.height;
-    return [x, y];
-  }
-
-  function pointInPoly(lon, lat, poly) {
-    var inside = false;
-    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      var xi = poly[i][0], yi = poly[i][1];
-      var xj = poly[j][0], yj = poly[j][1];
-      var intersect = ((yi > lat) !== (yj > lat)) &&
-        (lon < ((xj - xi) * (lat - yi)) / ((yj - yi) || 1e-9) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
+    if (!projection) return null;
+    return projection([lon, lat]);
   }
 
   function colorFor(mm) {
@@ -104,6 +88,8 @@
   }
 
   function generateForecast(startDateStr, windowSize, trainingKey) {
+    if (!usNation) return { days: [], gridByDay: [] };
+
     var seed = hashString(startDateStr + "|" + windowSize + "|" + trainingKey);
     var rng = mulberry32(seed);
     var bias = trainingBias(trainingKey);
@@ -124,7 +110,7 @@
 
       for (var lat = latMin; lat <= latMax; lat += 1.1) {
         for (var lon = lonMin; lon <= lonMax; lon += 1.3) {
-          if (!pointInPoly(lon, lat, usPoly)) continue;
+          if (!d3.geoContains(usNation, [lon, lat])) continue;
 
           var westLift = clamp((-(lon + 105)) / 20, 0, 1) * 8.4;
           var gulfFlow = clamp((31 - lat) / 8, 0, 1) * 7.1;
@@ -154,6 +140,8 @@
   }
 
   function drawMap(dayIndex) {
+    if (!path || !usNation) return;
+
     var cells = current.gridByDay[dayIndex] || [];
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -180,12 +168,7 @@
     }
 
     ctx.beginPath();
-    for (var i = 0; i < usPoly.length; i++) {
-      var p = toXY(usPoly[i][0], usPoly[i][1]);
-      if (i === 0) ctx.moveTo(p[0], p[1]);
-      else ctx.lineTo(p[0], p[1]);
-    }
-    ctx.closePath();
+    path(usNation);
     ctx.fillStyle = "rgba(18, 33, 59, 0.26)";
     ctx.fill();
 
@@ -193,6 +176,7 @@
     var ch = 11;
     cells.forEach(function (c) {
       var pt = toXY(c.lon, c.lat);
+      if (!pt) return;
       ctx.fillStyle = colorFor(c.mm);
       ctx.globalAlpha = 0.9;
       ctx.fillRect(pt[0] - cw / 2, pt[1] - ch / 2, cw, ch);
@@ -200,15 +184,18 @@
     ctx.globalAlpha = 1;
 
     ctx.beginPath();
-    for (var j = 0; j < usPoly.length; j++) {
-      var bp = toXY(usPoly[j][0], usPoly[j][1]);
-      if (j === 0) ctx.moveTo(bp[0], bp[1]);
-      else ctx.lineTo(bp[0], bp[1]);
-    }
-    ctx.closePath();
+    path(usNation);
     ctx.strokeStyle = "#1c3557";
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    if (usStateBorders) {
+      ctx.beginPath();
+      path(usStateBorders);
+      ctx.strokeStyle = "rgba(28, 53, 87, 0.5)";
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
 
     ctx.fillStyle = "#17345a";
     ctx.font = "600 18px IBM Plex Mono";
@@ -264,6 +251,7 @@
   }
 
   function run() {
+    if (!usNation) return;
     updateDateBounds();
     var start = startDateEl.value;
     var win = clamp(parseInt(windowSizeEl.value || "5", 10), 1, 14);
@@ -291,6 +279,26 @@
 
   runBtn.addEventListener("click", run);
 
-  updateDateBounds();
-  run();
+  function initMapGeometry() {
+    return fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
+      .then(function (resp) { return resp.json(); })
+      .then(function (topology) {
+        usNation = topojson.feature(topology, topology.objects.nation);
+        usStateBorders = topojson.mesh(topology, topology.objects.states, function (a, b) { return a !== b; });
+        projection = d3.geoAlbersUsa().fitExtent(
+          [[20, 20], [canvas.width - 20, canvas.height - 20]],
+          usNation
+        );
+        path = d3.geoPath(projection, ctx);
+      })
+      .catch(function () {
+        runBtn.disabled = true;
+        runBtn.textContent = "Map data failed to load";
+      });
+  }
+
+  initMapGeometry().then(function () {
+    updateDateBounds();
+    run();
+  });
 })();
